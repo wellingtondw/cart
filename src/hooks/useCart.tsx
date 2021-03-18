@@ -32,7 +32,11 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     return [];
   });
 
-  console.log(cart)
+  const handleAddCartProduct = (newCartState: Product[]) => {
+    setCart(newCartState)
+    localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCartState))
+  }
+
   const addProduct = async (productId: number) => {
     try {
       const { data: stock } = await api.get('/stock')
@@ -55,8 +59,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
           return product
         })
  
-        setCart(newCartState)
-        localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCartState))
+        handleAddCartProduct(newCartState)
         return        
       }
       
@@ -66,8 +69,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
         const newProduct = { ...product, amount: 1}
         const newCartState = [...cart, newProduct] 
 
-        setCart(newCartState)
-        localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCartState))
+        handleAddCartProduct(newCartState)
         return
       }
 
