@@ -36,22 +36,45 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   const addProduct = async (productId: number) => {
     try {
       const { data: stock } = await api.get('/stock')
-      
-      const hasStock = stock.find((product: Product) => product.id === productId).amount > 0
+      let productInCart = cart.find((product: Product) => product.id === productId)      
+      const productInStock = stock.find((product: Product) => product.id === productId)
+      const hasProductInStock = productInStock.amount > 0
+      const hasProductInCartAndStock = productInCart && productInStock.amount > productInCart.amount
 
-      if(!hasStock) {
+      if(!hasProductInStock) {
         toast.error('Quantidade solicitada fora de estoque');
         return
       }
 
-      const { data: products } = await api.get('/products')
-      const product = products.find((product: Product) => product.id === productId)
+      if(hasProductInCartAndStock) {
+        const newCartState = cart.map((product: Product) => {
+          if(product.id === productId) {
+            return {...product, amount: product.amount + 1}
+          }
 
-      const newCartState = [...cart, product] 
-
-      setCart(newCartState)
-      localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCartState))
+          return product
+        })
+ 
+        setCart(newCartState)
+        localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCartState))
+        return        
+      }
       
+      if(!productInCart) {
+        const { data: products } = await api.get('/products')
+        const product = products.find((product: Product) => product.id === productId)
+        const newProduct = { ...product, amount: 1}
+        const newCartState = [...cart, newProduct] 
+
+        setCart(newCartState)
+        localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCartState))
+        return
+      }
+
+      if(!hasProductInCartAndStock) {
+        toast.error('Quantidade solicitada fora de estoque');
+        return
+      }
     } catch {
       toast.error('Erro na adição do produto');
     }
